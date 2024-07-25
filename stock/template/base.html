@@ -5,8 +5,12 @@
 
 {% block title %}Home | ArtStock{% endblock title %}
 {% block content %}
-    <div class='ecom'>
-    <div class="container1">
+    <form method="GET" action="">
+      <input type="text" name="search" placeholder="Search..." required>
+      <button type="submit">Search</button>
+    </form>
+<div class='ecom'>
+  <div class="container1">
       {% for item in var %}
      
       <div class="card1">

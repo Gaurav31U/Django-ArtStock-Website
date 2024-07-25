@@ -13,10 +13,10 @@ from .models import Customer,Artist,Art,Order
 # Create your views here.
 
 def index_view(request):
-    query 	= request.GET.get('q')
+    query = request.GET.get('search')
     if query:
-        var=Art.objects.filter(Q(category=query)).distinct()
-        return render(request,'base.html',{'var':var})
+        var = Art.objects.filter(Q(category__icontains=query) | Q(name__icontains=query)).distinct()
+        return render(request, 'base.html', {'var': var})
     var = Art.objects.all()
     background=True
     return render(request,'base.html',{'var':var,'background':background})

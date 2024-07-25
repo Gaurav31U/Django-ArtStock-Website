@@ -4,6 +4,8 @@ WORKDIR /app
 
 RUN pip install django
 RUN pip install pillow
+RUN pip install prometheus-client
+RUN pip install django-redis
 
 COPY . /app/
 

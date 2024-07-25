@@ -11,6 +11,7 @@ admin.site.index_title = "Welcome to Artstock Portal"
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('stock.urls')),
+    path('', include('django_prometheus.urls')),
 ]
 
 if settings.DEBUG:

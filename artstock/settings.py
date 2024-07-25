@@ -5,10 +5,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = '@DRAGON_GOD123'
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
 INSTALLED_APPS = [
     'stock.apps.StockConfig',
     'django.contrib.admin',
+    'django_prometheus',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -24,6 +26,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
+
 ]
 
 ROOT_URLCONF = 'artstock.urls'

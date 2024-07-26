@@ -6,6 +6,7 @@ RUN pip install django
 RUN pip install pillow
 RUN pip install prometheus-client
 RUN pip install django-redis
+RUN pip install django-prometheus
 
 COPY . /app/
 

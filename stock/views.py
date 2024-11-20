@@ -13,7 +13,7 @@ from .models import Customer,Artist,Art,Order
 # Create your views here.
 
 def index_view(request):
-    query = request.GET.get('search')
+    query = request.GET.get('search')   # Query in parameter
     if query:
         var = Art.objects.filter(Q(category__icontains=query) | Q(name__icontains=query)).distinct()
         return render(request, 'base.html', {'var': var})
@@ -224,7 +224,7 @@ def Art_view(request,Art_id):
 
 
 def add_to_cart(request, Art_id):
-    if (request.user.is_customer == False):
+    if (request.user==None or request.user.is_customer == False):
         return render(request, 'SignCustomer.html', {'error_message': 'Your account not registered as Customer'})
 
     Ar=Art.objects.filter(Art_id=Art_id)
@@ -242,33 +242,7 @@ def add_to_cart(request, Art_id):
         my_cart.delivery_addr = cusAdd
         my_cart.save()
 
-    total=0
-    count=0
-    items=[]
-
-    mycart= Order.objects.filter(orderedBy=cus)
-    
-    for item in mycart:
-        temp=[]
-        Ar=Art.objects.filter(name=item.Art_id)
-        temp.append(Ar[0].Artist_id)
-        temp.append(Ar[0].Art_id)
-        temp.append(item.quantity)
-        temp.append(Ar[0].name)
-        temp.append(Ar[0].descrip)
-        temp.append(Ar[0].price)
-        temp.append(Ar[0].image)
-        items.append(temp)
-
-        total=total+item.total_amount
-        count=count+1
-    
-    context={
-        'items':items,
-        'total':total,
-        'count':count,
-    }
-    return render(request,'cart.html',context)
+    MyCart_view(request)
 
 def MyCart_view(request):
     if (request.user.is_customer == False):

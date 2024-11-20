@@ -15,18 +15,18 @@
         
 
         <form method="POST">{% csrf_token %}
-        {% comment %} {{ form.as_p }} {% endcomment %}
-            <div class="row100">
+        <!-- {{ form.as_p }} -->
+        <div class="row100">
                 <div class="col">
                    <div class="inputBox">
-                     <input type="text" name="firstname" required="required">
+                     <input type="text" name="firstname" required="required" id="id_firstname">
                         <span class="text">First Name</span>
                         <span class="line"></span>
                  </div>
               </div>
              <div class="col">
                     <div class="inputBox">
-                      <input type="text" name="lastname" required="required">
+                      <input type="text" name="lastname" required="required" id="id_lastname">
                       <span class="text">Last Name</span>
                       <span class="line"></span>
                   </div>
@@ -37,14 +37,14 @@
           <div class="row100">
                <div class="col">
                   <div class="inputBox">
-                     <input type="text" name="email" required="required">
+                     <input type="text" name="email" required="required" id="id_email">
                      <span class="text">Email</span>
                      <span class="line"></span>
                  </div>
               </div>
               <div class="col">
                  <div class="inputBox">
-                     <input type="text" name="phone" required="required">
+                     <input type="text" name="phone" required="required" id="id_phone">
                      <span class="text">Mobile Number</span>
                         <span class="line"></span>
                   </div>
@@ -55,7 +55,7 @@
           <div class="row100">
              <div class="col">
                  <div class="inputBox textarea">
-                        <textarea required="required" name="text"></textarea>
+                        <textarea required="required" name="text" id="id_text"></textarea>
                         <span class="text">Type Your Message Here...</span>
                         <span class="line"></span>
                  </div>

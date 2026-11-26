@@ -1,0 +1,63 @@
+{% extends 'built.html' %}
+{% load static %}
+{% block footer %}{% endblock footer %}
+{% block content %}
+<div class="auth">
+  <div class="auth-art" style="background-image:url('{% static art_image %}')">
+    <div>
+      <span class="eyebrow" style="color:#ffd2bd">{{ role_label }}</span>
+      <h2>{{ headline }}</h2>
+      <p>{{ blurb }}</p>
+    </div>
+  </div>
+  <div class="auth-panel">
+    <div class="auth-box">
+      <h1 style="font-size:2rem">{% if mode == 'signup' %}Create your account{% else %}Welcome back{% endif %}</h1>
+      <p class="muted">{{ role_label }} account</p>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab {% if mode != 'signup' %}active{% endif %}" data-tab="login">Sign in</button>
+        <button type="button" class="tab {% if mode == 'signup' %}active{% endif %}" data-tab="signup">Sign up</button>
+      </div>
+
+      <div class="tab-pane {% if mode != 'signup' %}active{% endif %}" id="pane-login">
+        {% if error_message %}<div class="alert error"><i class="fa-solid fa-circle-exclamation"></i>{{ error_message }}</div>{% endif %}
+        <form method="post" action="{% url login_url %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next }}">
+          <div class="field"><label for="login-username">Username</label><input id="login-username" class="input" type="text" name="username" autocomplete="username" required autofocus></div>
+          <div class="field"><label for="login-password">Password</label><input id="login-password" class="input" type="password" name="password" autocomplete="current-password" required></div>
+          <button class="btn btn-primary btn-block btn-lg">Sign in</button>
+        </form>
+      </div>
+
+      <div class="tab-pane {% if mode == 'signup' %}active{% endif %}" id="pane-signup">
+        <form method="post" action="{% url signup_url %}">
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="alert error">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+          {% for field in form %}
+          <div class="field{% if field.errors %} has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+          </div>
+          {% endfor %}
+          <button class="btn btn-primary btn-block btn-lg">Create account</button>
+        </form>
+      </div>
+
+      <p class="switch-role">{{ switch_text }} <a href="{% url switch_url %}">{{ switch_link }}</a></p>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (x) { x.classList.toggle('active', x === t); });
+      document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.toggle('active', p.id === 'pane-' + t.dataset.tab); });
+    });
+  });
+</script>
+{% endblock scripts %}

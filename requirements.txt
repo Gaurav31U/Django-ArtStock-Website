@@ -1,0 +1,5 @@
+Django>=5.2,<5.3
+Pillow>=10.0
+django-prometheus>=2.3
+django-redis>=5.4
+prometheus-client>=0.20

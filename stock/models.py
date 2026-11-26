@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
-from django.db.models.signals import post_save
 import datetime
 
 
@@ -37,8 +36,9 @@ class Art(models.Model):
 	quantity = models.IntegerField(blank=False)
 	name = models.CharField(max_length=50,blank=False)
 	descrip = models.TextField(blank=False)
-	price = models.CharField(max_length=12,blank=False)
+	price = models.PositiveIntegerField()
 	image = models.ImageField(null=False, blank=False)
+	created_at = models.DateTimeField(auto_now_add=True, null=True)
 
 	CATEGORY_GAMES		=	"Games"
 	CATEGORY_FICTION	=	"Fiction"
@@ -70,8 +70,15 @@ class Art(models.Model):
 
 	category = models.CharField(max_length=20,choices=CATEGORY_STATE_CHOICES,default=CATEGORY_OTHER)
 
+	class Meta:
+		ordering = ['-Art_id']
+
 	def __str__(self):
 		return self.name
+
+	@property
+	def in_stock(self):
+		return self.quantity > 0
 
 class Order(models.Model):
 	O_id = models.AutoField(primary_key=True)
@@ -100,8 +107,15 @@ class Order(models.Model):
 
 	status = models.CharField(max_length=50,choices=ORDER_STATE_CHOICES,default=ORDER_STATE_WAITING)
 
+	class Meta:
+		ordering = ['-timestamp']
+
 	def __str__(self):
 		return str(self.O_id) +' '+self.status
+
+	@property
+	def unit_price(self):
+		return self.Art_id.price
 
 
 # class OrderItem(models.Model):
@@ -118,7 +132,8 @@ class ContactUs(models.Model):
 	lastname = models.CharField(max_length=50)
 	phone = models.CharField(max_length=14)
 	email = models.EmailField(max_length=254)
-	text = models.TextField()	
+	text = models.TextField()
+	created_at = models.DateTimeField(auto_now_add=True, null=True)
 
 	def __str__(self):
 		return self.firstname + ' ' + self.lastname

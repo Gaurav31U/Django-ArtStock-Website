@@ -1,68 +1,93 @@
-{% extends 'built.html'%}
-{% block title %}Artist Profile{% endblock %}
-{% block head %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-{% endblock head %}
+{% extends 'built.html' %}
+{% load humanize %}
+{% block title %}Artist studio{% endblock title %}
 {% block content %}
-<br>
-  
-  <br>
-	<div class="container col-md-8"  style="padding-top: 150px;">
-		 
-		<div class="row">
-		<div class=" col-md-11 toppad">   
-   
-          <div class="panel panel-info">
-            <div class="panel-heading">
-              <h1 class="panel-title text-info "><strong>{{user.artist.name}}</strong></h1>
-                          </div>
-              
-                          <div class="panel-body" style="padding-top: 20px; padding-bottom: 20px;">
-                            <div class="row">
-                              
-                              <div class=" col-md-9 col-lg-9 "> 
-                                <table class="table table-user-information">
-                                  <tbody>
-                                  	<tr>
-                                      <td>UserName:</td>
-                                      <td>{{user.username}}</td>
-                                    </tr>
-                                    <tr>
-                                      <td>Name:</td>
-                                      <td>{{user.artist.name}}</td>
-                                    </tr>
-                                    <tr>
-                                      <td>Name:</td>
-                                      <td>{{user.artist.phone}}</td>
-                                    </tr>
-                                    
-                                    <tr>
-                                      <td>Address:</td>
-                                      <td>{{user.artist.address}}</td>
-                                    </tr>
-                                    
-                                    <tr>
-                                      <td>Email:</td>
-                                      <td><a href="#">{{user.email}}</a></td>
-                                    </tr>
-                                
-                                  </tbody>
-                                </table>
-                                   <div class="container">
-                                <div class="row">
-                                  <div class="col">
-                                  <a class="btn btn-success btn-lg" href="{% url 'aupdate' user.id %}">Edit</a>
-                                  <a class="btn btn-danger btn-lg" href="{% url 'addart' %}">Add Art</a>
-                                </div>
-                            
-                                </div>
-                          </div>
-                </div>
-              </div>
-            </div>
+<div class="container" style="padding-top:36px">
+  <div class="card profile-head">
+    <div class="avatar">{{ artist.name|first|upper }}</div>
+    <div class="info">
+      <span class="eyebrow">Artist studio</span>
+      <h1>{{ artist.name }}</h1>
+      <div class="contact-line">
+        <span><i class="fa-regular fa-user"></i>@{{ user.username }}</span>
+        <span><i class="fa-regular fa-envelope"></i>{{ artist.email }}</span>
+        <span><i class="fa-solid fa-phone"></i>{{ artist.phone }}</span>
+        <span><i class="fa-solid fa-location-dot"></i>{{ artist.address|truncatechars:50 }}</span>
+      </div>
+    </div>
+    <div class="row">
+      <a href="{% url 'artist_public' artist.pk %}" class="btn btn-outline"><i class="fa-regular fa-eye"></i> Public page</a>
+      <a href="{% url 'aupdate' user.id %}" class="btn btn-outline"><i class="fa-solid fa-pen"></i> Edit</a>
+      <a href="{% url 'addart' %}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add artwork</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="card stat"><span>Artworks listed</span><strong>{{ arts|length }}</strong></div>
+    <div class="card stat"><span>Orders</span><strong>{{ summary.orders|default:0 }}</strong></div>
+    <div class="card stat"><span>Pieces sold</span><strong>{{ summary.pieces|default:0 }}</strong></div>
+    <div class="card stat"><span>Revenue</span><strong>₹{{ summary.revenue|default:0|intcomma }}</strong></div>
+  </div>
+
+  <div class="section-title"><h2>Incoming orders</h2></div>
+  {% if sales %}
+  <div class="card table-wrap">
+    <table class="table">
+      <thead><tr><th>Artwork</th><th>Buyer</th><th>Date</th><th>Qty</th><th>Total</th><th>Status</th><th>Update</th></tr></thead>
+      <tbody>
+      {% for o in sales %}
+        <tr>
+          <td><span class="cell-art"><img class="thumb" src="{{ o.Art_id.image.url }}" alt="">{{ o.Art_id.name }}</span></td>
+          <td>{{ o.orderedBy.name }}<div class="muted" style="font-size:.82rem">{{ o.delivery_addr|truncatechars:40 }}</div></td>
+          <td class="muted">{{ o.timestamp|date:"d M Y" }}</td>
+          <td>{{ o.quantity }}</td>
+          <td><strong>₹{{ o.total_amount|intcomma }}</strong></td>
+          <td><span class="status {{ o.status }}">{{ o.status }}</span></td>
+          <td>
+            {% if o.status != 'Cancelled' and o.status != 'Completed' %}
+            <form method="post" action="{% url 'update_order_status' o.O_id %}" class="inline-form">
+              {% csrf_token %}
+              <select name="status" class="input select" aria-label="New status">
+                {% for s in status_flow %}<option value="{{ s }}" {% if s == o.status %}selected{% endif %}>{{ s }}</option>{% endfor %}
+              </select>
+              <button class="btn btn-dark btn-sm">Save</button>
+            </form>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><i class="fa-solid fa-inbox"></i><h3>No orders yet</h3><p>Orders for your artwork will show up here.</p></div>
+  {% endif %}
+
+  <div class="section-title"><h2>My artwork</h2><a href="{% url 'addart' %}" class="btn btn-outline btn-sm"><i class="fa-solid fa-plus"></i> New</a></div>
+  {% if arts %}
+  <div class="grid grid-4">
+    {% for art in arts %}
+    <article class="card art-card manage-card">
+      <a href="{% url 'Art' art.Art_id %}" class="art-thumb">
+        <img src="{{ art.image.url }}" alt="{{ art.name }}" loading="lazy">
+        <span class="art-tag">{{ art.category }}</span>
+        {% if not art.in_stock %}<span class="art-tag sold">Sold out</span>{% endif %}
+      </a>
+      <div class="art-body">
+        <a href="{% url 'Art' art.Art_id %}" class="art-title">{{ art.name }}</a>
+        <span class="art-artist">₹{{ art.price|intcomma }} · {{ art.quantity }} in stock · {{ art.sold|default:0 }} sold</span>
+        <div class="art-foot">
+          <a href="{% url 'edit_art' art.Art_id %}" class="btn btn-outline btn-sm"><i class="fa-solid fa-pen"></i> Edit</a>
+          <form method="post" action="{% url 'delete_art' art.Art_id %}" onsubmit="return confirm('Delete “{{ art.name|escapejs }}”? This also removes its orders.')">
+            {% csrf_token %}<button class="btn btn-ghost btn-sm"><i class="fa-regular fa-trash-can"></i> Delete</button>
+          </form>
         </div>
-        </div>
-		</div>
-	</div>
-  <br>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><i class="fa-solid fa-palette"></i><h3>Your studio is empty</h3><p>Upload your first artwork to start selling.</p><a href="{% url 'addart' %}" class="btn btn-primary">Add artwork</a></div>
+  {% endif %}
+</div>
 {% endblock content %}

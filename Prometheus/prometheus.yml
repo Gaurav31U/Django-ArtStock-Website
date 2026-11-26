@@ -4,4 +4,6 @@ global:
 scrape_configs:
   - job_name: django
     static_configs:
-      - targets: ["host.docker.internal:8000"]
+      # "app" is the Django service in the root docker-compose.yml;
+      # host.docker.internal covers running Django directly on the host.
+      - targets: ["app:8000", "host.docker.internal:8000"]

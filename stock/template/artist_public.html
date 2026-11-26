@@ -1,0 +1,26 @@
+{% extends 'built.html' %}
+{% block title %}{{ artist.name }}{% endblock title %}
+{% block content %}
+<div class="container">
+  <nav class="crumbs"><a href="{% url 'index' %}">Gallery</a> / <span>Artists</span> / <span>{{ artist.name }}</span></nav>
+  <div class="card profile-head">
+    <div class="avatar">{{ artist.name|first|upper }}</div>
+    <div class="info">
+      <span class="eyebrow">Artist</span>
+      <h1>{{ artist.name }}</h1>
+      <div class="contact-line">
+        <span><i class="fa-solid fa-location-dot"></i>{{ artist.address|truncatechars:60 }}</span>
+        <span><i class="fa-regular fa-calendar"></i>Joined {{ artist.date|date:"M Y" }}</span>
+        <span><i class="fa-solid fa-image"></i>{{ arts|length }} artwork{{ arts|length|pluralize }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title"><h2>Works by {{ artist.name }}</h2></div>
+  {% if arts %}
+  <div class="grid">{% for art in arts %}{% include 'partials/art_card.html' %}{% endfor %}</div>
+  {% else %}
+  <div class="empty"><i class="fa-solid fa-image"></i><h3>No artwork yet</h3><p>This artist hasn't listed anything yet.</p></div>
+  {% endif %}
+</div>
+{% endblock content %}

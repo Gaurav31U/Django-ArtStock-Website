@@ -1,3 +1,7 @@
-artstock/__pycache__/
-stock/__pycache__/
-.gitignore
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+staticfiles/
+.claude/settings.local.json

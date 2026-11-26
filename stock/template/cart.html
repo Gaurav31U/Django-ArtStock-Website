@@ -1,102 +1,59 @@
 {% extends 'built.html' %}
-{% block head %}
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-{% endblock head %}    
+{% load humanize %}
+{% block title %}Your cart{% endblock title %}
 {% block content %}
-
-<div style="padding-top: 200px; padding-bottom:200px;">
-                 
-     <div class="container mt-5">
-        <div class="row pt-5">
-          <div class="col-xl-8 col-lg-12 col-md-12 col-sm-12 col-12 mt-3">
-                <div class="card">
-                  <div class="card-header">
-                    <div class="row pt-3 pb-3">
-                      <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-6 ">
-                        <span style="font-size:20px;font-weight:700;color:grey;color:black">My Cart({{ count }})</span>
-                      </div>
-                      <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12  text-right">
-                        <i class="fa fa-map-marker" aria-hidden="true"></i>&nbsp;Deliver to &nbsp;<input type="text" placeholder="user name and address">
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="card-body">
-
-
-                      {% for var in items %} 
-                      
-                       
-                      <div class="row pb-3 ">
-                        <div class="col-xl-4 col-lg-2 col-md-3 col-sm-3 col-12 pt-5 text-center">
-                          <img src="{{var.6.url}}" height="auto" width="220px">
-                        <div class="text-left">
-                            {{var.1}}
-                          </div>
-                        </div>
-                        <div class="col-xl-8 col-lg-10 col-md-8 col-sm-8 col-12 pt-5">
-                          <p>Art Name:&nbsp;{{var.3}}</p>
-                          <p>Artist:&nbsp;{{var.0}}</p>
-                          <p>Price:&nbsp;&#8377;{{var.5}}</p>
-                          <p>Description:&nbsp;{{var.4}}</p>
-                          <p>Quantity:&nbsp;{{var.2}}</p>
-                          <p><a href="#/" style="font-weight:700">REMOVE</a></p>
-                        </div>
-                      </div>
-
-                      {% endfor %}
-
-                      <div class="row">
-                        <div class="col pr-5 text-right">
-                          <p><button style="text-transform: uppercase;padding:2% 5%;background-color: tomato;color:white;border-color:transparent" data-toggle="collapse" data-target="#collapseTwo,#payment-option"><a href="{% url 'payment' %}" style="color: white;">Place Order</a></button></p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-              </div>
-          </div>
-
-
-
-
-
-          <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12 col-12 mt-3 pt-4">
-            <div class="container">
-              <div class="card">
-                <div class="card-header">PRICE DETAILS</div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col text-left">
-                      Price({{ count }}) :
-                    </div>
-                    <div class="col text-right">
-                      &#8377;{{ total }}
-                    </div>
-                  </div>
-                    <div class="row pt-3">
-                      <div class="col-7 text-left ">
-                        Delivery Charges:
-                      </div>
-                      <div class="col text-right">
-                        Free
-                      </div>
-                    </div>
-                  <hr>
-                  <div class="row">
-                    <div class="col text-left">
-                      Total Amount:
-                    </div>
-                    <div class="col text-right">
-                      &#8377;{{total}}
-                    </div>
-                  </div>
-                </div> 
-              </div>
-            </div>
-          </div>
-      </div>
-
+<div class="container">
+  <div class="page-head">
+    <span class="eyebrow">Shopping cart</span>
+    <h1>Your cart {% if count %}<span class="muted" style="font-size:.55em">({{ count }} item{{ count|pluralize }})</span>{% endif %}</h1>
   </div>
+
+  {% if items %}
+  <div class="layout-2" style="margin-top:18px">
+    <div class="card">
+      {% for item in items %}
+      <div class="cart-item">
+        <a href="{% url 'Art' item.Art_id.Art_id %}"><img src="{{ item.Art_id.image.url }}" alt="{{ item.Art_id.name }}"></a>
+        <div>
+          <h3><a href="{% url 'Art' item.Art_id.Art_id %}">{{ item.Art_id.name }}</a></h3>
+          <div class="muted" style="font-size:.9rem">by {{ item.Art_id.Artist_id.name }} · ₹{{ item.Art_id.price|intcomma }} each</div>
+          <div class="controls">
+            <form method="post" action="{% url 'update_cart' item.O_id %}" data-autosubmit>
+              {% csrf_token %}
+              <div class="qty sm">
+                <button type="button" data-step="-1" aria-label="Decrease">−</button>
+                <input type="number" name="quantity" value="{{ item.quantity }}" min="0" max="{{ item.Art_id.quantity }}" aria-label="Quantity" onchange="this.form.submit()">
+                <button type="button" data-step="1" aria-label="Increase">+</button>
+              </div>
+            </form>
+            <form method="post" action="{% url 'remove_from_cart' item.O_id %}">
+              {% csrf_token %}
+              <button class="btn btn-ghost btn-sm"><i class="fa-regular fa-trash-can"></i> Remove</button>
+            </form>
+          </div>
+          {% if item.quantity > item.Art_id.quantity %}<p class="stock-note out"><i class="fa-solid fa-triangle-exclamation"></i> Only {{ item.Art_id.quantity }} left in stock</p>{% endif %}
+        </div>
+        <div class="line-total">₹{{ item.line_total|intcomma }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <aside class="card summary">
+      <h3>Order summary</h3>
+      <div class="summary-row"><span>Subtotal ({{ count }} item{{ count|pluralize }})</span><span>₹{{ total|intcomma }}</span></div>
+      <div class="summary-row"><span>Delivery</span><span class="free">Free</span></div>
+      <div class="summary-row total"><span>Total</span><span>₹{{ total|intcomma }}</span></div>
+      <a href="{% url 'payment' %}" class="btn btn-primary btn-block btn-lg" style="margin-top:18px">Proceed to checkout <i class="fa-solid fa-arrow-right"></i></a>
+      <a href="{% url 'index' %}#gallery" class="btn btn-outline btn-block" style="margin-top:10px">Continue shopping</a>
+    </aside>
+  </div>
+  {% else %}
+  <div class="empty" style="margin-top:18px">
+    <i class="fa-solid fa-bag-shopping"></i>
+    <h3>Your cart is empty</h3>
+    <p>Browse the gallery and add a piece you love.</p>
+    <a href="{% url 'index' %}#gallery" class="btn btn-primary">Explore artwork</a>
+  </div>
+  {% endif %}
 </div>
 {% endblock content %}

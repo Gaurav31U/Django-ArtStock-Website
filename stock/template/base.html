@@ -1,51 +1,104 @@
 {% extends 'built.html' %}
-{% block head %}
-<style>{% include "style.css" %}</style>
-{% endblock head %}
-
-{% block title %}Home | ArtStock{% endblock title %}
+{% load static %}
+{% block title %}{% if query %}“{{ query }}”{% elif category %}{{ category }}{% else %}Original art from independent artists{% endif %}{% endblock title %}
 {% block content %}
-    <form method="GET" action="">
-      <input type="text" name="search" placeholder="Search..." required>
-      <button type="submit">Search</button>
-    </form>
-<div class='ecom'>
-  <div class="container1">
-      {% for item in var %}
-     
-      <div class="card1">
-        <div class="imgBx">
-          <img src="{{item.image.url}}">
-          <ul class="action1">
-            <li><a href="{% url 'Art' item.Art_id %}"><i class="fa fa-info" aria-hidden="true"></i></a>
-            <span>About</span>
-            </li>
-            <li><a class="btn btn-danger btn-lg" href="{% url 'Add_to_Cart' item.Art_id %}"><i class="fa fa-shopping-cart" aria-hidden="true"></i></a>
-            <span>Add to Cart</span></a>
-            </li>
-            <li><a href="{{item.image.url}}"><i class="fa fa-eye" aria-hidden="true"></i>
-              <span>Full screen</span>
-            </li>
-          </ul>
-        </div>
-        <div class="content">
-          <div class="productName">
-            <a href="{% url 'Art' item.Art_id %}" style="text-decoration: none;"><h3>{{item.name}}</h3></a>
-          </div>
-          <div class="price_rating">
-            <h2>₹ {{item.price}}</h2>
-            {% comment %} <div class="rating">
-              <i class="fa fa-star" aria-hidden="true"></i>
-              <i class="fa fa-star" aria-hidden="true"></i>
-              <i class="fa fa-star" aria-hidden="true"></i>
-              <i class="fa fa-star" aria-hidden="true"></i>
-              <i class="fa fa-star" aria-hidden="true"></i>
-            </div> {% endcomment %}
-          </div>
-        </div>
-      </div>
 
-      {% endfor %}
+{% if show_hero %}
+<section class="hero" style="background-image:url('{% static '7.jpg' %}')">
+  <div class="container">
+    <div class="hero-content">
+      <span class="eyebrow">Online art gallery</span>
+      <h1>Original art, straight from the artist's studio.</h1>
+      <p>Discover paintings, sketches and prints by independent Indian artists — and bring one home with free delivery.</p>
+      <div class="hero-actions">
+        <a href="#gallery" class="btn btn-primary btn-lg">Explore the gallery <i class="fa-solid fa-arrow-down"></i></a>
+        {% if not user.is_authenticated %}<a href="{% url 'sign_up_artist' %}" class="btn btn-light btn-lg">Sell your art</a>{% endif %}
+      </div>
+      <div class="hero-stats">
+        <div><strong>{{ stats.artworks }}</strong><span>Artworks</span></div>
+        <div><strong>{{ stats.artists }}</strong><span>Artists</span></div>
+        <div><strong>{{ stats.categories }}</strong><span>Categories</span></div>
+      </div>
     </div>
   </div>
+</section>
+{% endif %}
+
+<section class="section" id="gallery">
+  <div class="container">
+    {% if show_hero %}
+      <span class="eyebrow">The collection</span>
+      <h2>Fresh on the walls</h2>
+    {% else %}
+      <h1 style="margin-top:8px">{% if query %}Results for “{{ query }}”{% else %}{{ category }}{% endif %}</h1>
+    {% endif %}
+
+    <form method="get" action="{% url 'index' %}#gallery" class="toolbar" style="margin-top:18px">
+      <label class="search">
+        <span class="sr-only">Search</span>
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input class="input" type="search" name="search" value="{{ query }}" placeholder="Search by title, artist or style…">
+      </label>
+      {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+      <div class="row">
+        <label class="sr-only" for="sort">Sort</label>
+        <select id="sort" name="sort" class="input select" style="width:auto;border-radius:999px;height:48px" onchange="this.form.submit()">
+          <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+          <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: low to high</option>
+          <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: high to low</option>
+          <option value="name" {% if sort == 'name' %}selected{% endif %}>Title A–Z</option>
+        </select>
+        <button class="btn btn-dark" style="height:48px">Search</button>
+      </div>
+    </form>
+
+    <nav class="chips" aria-label="Categories">
+      <a href="{% url 'index' %}{% if query %}?search={{ query|urlencode }}{% endif %}#gallery" class="chip {% if not category %}active{% endif %}">All</a>
+      {% for c in categories %}
+      <a href="?category={{ c|urlencode }}{% if query %}&search={{ query|urlencode }}{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}#gallery" class="chip {% if category == c %}active{% endif %}">{{ c }}</a>
+      {% endfor %}
+    </nav>
+
+    {% if not show_hero %}<p class="result-meta">{{ arts|length }} artwork{{ arts|length|pluralize }} found · <a href="{% url 'index' %}" style="color:var(--accent)">Clear filters</a></p>{% endif %}
+
+    {% if arts %}
+    <div class="grid">
+      {% for art in arts %}{% include 'partials/art_card.html' %}{% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+      <i class="fa-solid fa-image"></i>
+      <h3>Nothing here yet</h3>
+      <p>No artwork matches your search. Try another keyword or category.</p>
+      <a href="{% url 'index' %}" class="btn btn-outline">Browse everything</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% if show_hero %}
+<section class="section-sm">
+  <div class="container">
+    <div class="features">
+      <div class="card feature"><i class="fa-solid fa-paintbrush"></i><h3>Straight from artists</h3><p>Every piece is listed by the artist who made it — no middlemen.</p></div>
+      <div class="card feature"><i class="fa-solid fa-truck-fast"></i><h3>Free home delivery</h3><p>Carefully packed and shipped to your door at no extra cost.</p></div>
+      <div class="card feature"><i class="fa-solid fa-hand-holding-dollar"></i><h3>Pay on delivery</h3><p>Pay only when your artwork arrives safely.</p></div>
+      <div class="card feature"><i class="fa-solid fa-user-plus"></i><h3>Free to join</h3><p>Create a collector or artist account in under a minute.</p></div>
+    </div>
+  </div>
+</section>
+{% if not user.is_authenticated %}
+<section class="section">
+  <div class="container">
+    <div class="cta">
+      <div>
+        <h2>Are you an artist?</h2>
+        <p>Open your studio on ArtStock, list your work and track every sale.</p>
+      </div>
+      <a href="{% url 'sign_up_artist' %}" class="btn btn-primary btn-lg">Start selling</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endif %}
 {% endblock content %}

@@ -1,70 +1,52 @@
-{% extends 'built.html'%}
-{% block head %}<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">{% endblock head %}
-{% block title %}Profile{% endblock %}
-
+{% extends 'built.html' %}
+{% load humanize %}
+{% block title %}My account{% endblock title %}
 {% block content %}
-<br>
-<div style="padding-top: 150px; padding-bottom: 50px;">
-    <div class="container col-md-8">
-            
-        <div class="row">
-        <div class=" col-md-11 toppad">   
-   
-          <div class="panel panel-info">
-            <div class="panel-heading">
-              <h3 class="panel-title text-info "><strong>{{user.customer.name}}</strong></h3>
-                          </div>
-                          <br>
-                          <div class="panel-body">
-                            <div class="row">
-                              
-                              <div class=" col-md-9 col-lg-9 "> 
-                                <table class="table table-user-information">
-                                  <tbody>
-                                  	<tr>
-                                      <td>User Name:</td>
-                                      <td>{{user.username}}</td>
-                                    </tr>
-                                    <tr>
-                                      <td>First Name:</td>
-                                      <td>{{user.customer.name}}</td>
-                                    </tr>
-                                
-                                   
-                                
-                                      <td>Address:</td>
-                                      <td>{{user.customer.address}}</td>
-                                    </tr>
-                                    <tr>
-                                      <td>Email:</td>
-                                      <td><a href="#">{{user.email}}</a></td>
-                                    </tr>
-                                    <tr>
-                                      <td>Phone Number:</td>
-                                      <td>{{user.customer.phone}}
-                                      </td>
-                                         
-                                    </tr>
-                                   
-                                  </tbody>
-                                </table>
-                                <div class="container">
-                                <div class="row">
-                                  <div class="col">
-                                  <a class="btn btn-success btn-lg" href="{% url 'cupdate' user.id %}">Edit</a>
-                                  <a class="btn btn-danger btn-lg" href="{% url 'Cart' %}">MyCart</a>
-                                </div>
-                                
-                                </div>
-                  				</div>
-                  
-                </div>
-              </div>
-            </div>
-        </div>
-        </div>
-		</div>
-	</div>
-  <br>
+<div class="container" style="padding-top:36px">
+  <div class="card profile-head">
+    <div class="avatar">{{ customer.name|first|upper }}</div>
+    <div class="info">
+      <span class="eyebrow">Collector</span>
+      <h1>{{ customer.name }}</h1>
+      <div class="contact-line">
+        <span><i class="fa-regular fa-user"></i>@{{ user.username }}</span>
+        <span><i class="fa-regular fa-envelope"></i>{{ customer.email }}</span>
+        <span><i class="fa-solid fa-phone"></i>{{ customer.phone }}</span>
+      </div>
+      <div class="contact-line" style="margin-top:6px"><span><i class="fa-solid fa-location-dot"></i>{{ customer.address }}</span></div>
+    </div>
+    <div class="row">
+      <a href="{% url 'cupdate' user.id %}" class="btn btn-outline"><i class="fa-solid fa-pen"></i> Edit profile</a>
+      <a href="{% url 'Cart' %}" class="btn btn-dark"><i class="fa-solid fa-bag-shopping"></i> Cart{% if cart_count %} ({{ cart_count }}){% endif %}</a>
+    </div>
+  </div>
+
+  <div class="section-title"><h2>My orders</h2></div>
+  {% if orders %}
+  <div class="card table-wrap">
+    <table class="table">
+      <thead><tr><th>Artwork</th><th>Order</th><th>Date</th><th>Qty</th><th>Total</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for o in orders %}
+        <tr>
+          <td><a class="cell-art" href="{% url 'Art' o.Art_id.Art_id %}"><img class="thumb" src="{{ o.Art_id.image.url }}" alt="">{{ o.Art_id.name }}</a></td>
+          <td class="muted">#{{ o.O_id }}</td>
+          <td class="muted">{{ o.timestamp|date:"d M Y" }}</td>
+          <td>{{ o.quantity }}</td>
+          <td><strong>₹{{ o.total_amount|intcomma }}</strong></td>
+          <td><span class="status {{ o.status }}">{{ o.status }}</span></td>
+          <td>
+            {% if o.status == 'Placed' or o.status == 'Acknowledged' %}
+            <form method="post" action="{% url 'cancel_order' o.O_id %}" onsubmit="return confirm('Cancel this order?')">{% csrf_token %}<button class="btn btn-ghost btn-sm">Cancel</button></form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty"><i class="fa-solid fa-box-open"></i><h3>No orders yet</h3><p>When you place an order, you can follow it here.</p><a href="{% url 'index' %}#gallery" class="btn btn-primary">Start exploring</a></div>
+  {% endif %}
 </div>
 {% endblock content %}

@@ -1,0 +1,22 @@
+{% load humanize %}
+<article class="card art-card">
+  <a href="{% url 'Art' art.Art_id %}" class="art-thumb">
+    <img src="{{ art.image.url }}" alt="{{ art.name }}" loading="lazy">
+    <span class="art-tag">{{ art.category }}</span>
+    {% if not art.in_stock %}<span class="art-tag sold">Sold out</span>{% endif %}
+  </a>
+  <div class="art-body">
+    <a href="{% url 'Art' art.Art_id %}" class="art-title">{{ art.name }}</a>
+    <a href="{% url 'artist_public' art.Artist_id.pk %}" class="art-artist">by {{ art.Artist_id.name }}</a>
+    <div class="art-foot">
+      <span class="price">₹{{ art.price|intcomma }}</span>
+      {% if art.in_stock and not user.is_artist %}
+      <form method="post" action="{% url 'Add_to_Cart' art.Art_id %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <button class="icon-btn" title="Add to cart" aria-label="Add {{ art.name }} to cart"><i class="fa-solid fa-cart-plus"></i></button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</article>

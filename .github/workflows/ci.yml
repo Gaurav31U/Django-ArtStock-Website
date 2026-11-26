@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        database: [sqlite, postgres]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: artstock
+          POSTGRES_USER: artstock
+          POSTGRES_PASSWORD: artstock
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U artstock"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: ${{ matrix.database == 'postgres' && 'postgres://artstock:artstock@localhost:5432/artstock' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Django checks
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+      - name: Deployment checks
+        env:
+          DJANGO_DEBUG: "False"
+          DJANGO_SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-the-deploy-check-1234567890
+          DJANGO_ALLOWED_HOSTS: example.com
+        run: |
+          python manage.py collectstatic --noinput
+          python manage.py check --deploy --fail-level ERROR
+      - name: Tests
+        run: python manage.py test stock
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t artstock .

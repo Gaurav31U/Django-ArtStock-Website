@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 
-from .models import Art, Artist, ContactUs, Customer, User
+from .models import Art, Artist, ContactUs, Customer, Order, Review, User
 
 
 class StyledFormMixin:
@@ -10,12 +10,33 @@ class StyledFormMixin:
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		for field in self.fields.values():
+			widget = field.widget
+			if isinstance(widget, (forms.RadioSelect, forms.CheckboxInput)):
+				continue
 			css = 'input'
-			if isinstance(field.widget, forms.Select):
+			if isinstance(widget, forms.Select):
 				css = 'input select'
-			elif isinstance(field.widget, forms.ClearableFileInput):
+			elif isinstance(widget, forms.ClearableFileInput):
 				css = 'input file'
-			field.widget.attrs.setdefault('class', css)
+			widget.attrs.setdefault('class', css)
+
+
+class MultipleFileInput(forms.ClearableFileInput):
+	allow_multiple_selected = True
+
+
+class MultipleImageField(forms.ImageField):
+	"""ImageField that accepts several files from one <input multiple>."""
+
+	def __init__(self, *args, **kwargs):
+		kwargs.setdefault('widget', MultipleFileInput(attrs={'accept': 'image/*'}))
+		super().__init__(*args, **kwargs)
+
+	def clean(self, data, initial=None):
+		single = super().clean
+		if isinstance(data, (list, tuple)):
+			return [single(d, initial) for d in data if d]
+		return [single(data, initial)] if data else []
 
 
 class ContactUsForm(StyledFormMixin, forms.ModelForm):
@@ -43,6 +64,12 @@ class BaseSignUpForm(StyledFormMixin, forms.ModelForm):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.fields['email'].required = True
+
+	def clean_email(self):
+		email = self.cleaned_data['email'].strip()
+		if User.objects.filter(email__iexact=email).exists():
+			raise forms.ValidationError('An account with this email already exists.')
+		return email
 
 	def clean(self):
 		cleaned = super().clean()
@@ -84,21 +111,47 @@ class CustomerForm(StyledFormMixin, forms.ModelForm):
 class ArtistForm(StyledFormMixin, forms.ModelForm):
 	class Meta:
 		model = Artist
-		fields = ['name', 'email', 'phone', 'address']
-		widgets = {'address': forms.Textarea(attrs={'rows': 3})}
+		fields = ['name', 'email', 'phone', 'photo', 'address', 'bio']
+		labels = {'photo': 'Profile photo'}
+		widgets = {
+			'address': forms.Textarea(attrs={'rows': 3}),
+			'bio': forms.Textarea(attrs={'rows': 4}),
+		}
 
 
 class ArtForm(StyledFormMixin, forms.ModelForm):
+	extra_images = MultipleImageField(required=False, label='More photos',
+	                                  help_text='Optional: detail shots, framing or a wall view. Select several at once.')
+
 	class Meta:
 		model = Art
-		fields = ['name', 'category', 'descrip', 'price', 'quantity', 'image']
+		fields = ['name', 'category', 'descrip', 'price', 'quantity', 'medium', 'size', 'year', 'image']
 		labels = {
 			'descrip': 'Description',
 			'price': 'Price (₹)',
 			'quantity': 'Copies in stock',
+			'image': 'Main image',
 		}
 		widgets = {'descrip': forms.Textarea(attrs={'rows': 4})}
 
 
 class CheckoutForm(StyledFormMixin, forms.Form):
 	delivery_addr = forms.CharField(label='Delivery address', widget=forms.Textarea(attrs={'rows': 3}))
+	payment_method = forms.ChoiceField(choices=Order.PAYMENT_METHOD_CHOICES, initial=Order.PAYMENT_COD,
+	                                   widget=forms.RadioSelect)
+
+	def __init__(self, *args, online_enabled=False, **kwargs):
+		super().__init__(*args, **kwargs)
+		if not online_enabled:
+			self.fields['payment_method'].choices = [(Order.PAYMENT_COD, 'Pay on delivery')]
+
+
+class ReviewForm(StyledFormMixin, forms.ModelForm):
+	rating = forms.TypedChoiceField(choices=[(i, i) for i in range(5, 0, -1)], coerce=int,
+	                                widget=forms.RadioSelect)
+
+	class Meta:
+		model = Review
+		fields = ['rating', 'comment']
+		widgets = {'comment': forms.Textarea(attrs={'rows': 3, 'placeholder': 'What did you think of this piece?'})}
+		labels = {'comment': 'Your review (optional)'}

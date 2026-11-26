@@ -1,0 +1,20 @@
+{% extends 'built.html' %}
+{% block title %}Wishlist{% endblock title %}
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <span class="eyebrow">Saved for later</span>
+    <h1>Your wishlist {% if arts %}<span class="muted" style="font-size:.55em">({{ arts|length }})</span>{% endif %}</h1>
+  </div>
+  {% if arts %}
+  <div class="grid" style="margin-top:18px">{% for art in arts %}{% include 'partials/art_card.html' %}{% endfor %}</div>
+  {% else %}
+  <div class="empty" style="margin-top:18px">
+    <i class="fa-regular fa-heart"></i>
+    <h3>Nothing saved yet</h3>
+    <p>Tap the heart on any artwork to keep it here.</p>
+    <a href="{% url 'index' %}#gallery" class="btn btn-primary">Explore artwork</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock content %}

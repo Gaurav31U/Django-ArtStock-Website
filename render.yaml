@@ -1,0 +1,47 @@
+# One-click deploy on Render: New → Blueprint → pick this repo.
+# Uploaded images live on the attached disk; the database is managed Postgres.
+services:
+  - type: web
+    name: artstock
+    runtime: docker
+    plan: starter
+    healthCheckPath: /
+    disk:
+      name: media
+      mountPath: /app/media
+      sizeGB: 1
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+      - key: DJANGO_MEDIA_ROOT
+        value: /app/media
+      - key: DATABASE_URL
+        fromDatabase:
+          name: artstock-db
+          property: connectionString
+      # Fill these in the Render dashboard:
+      - key: SITE_URL
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+
+databases:
+  - name: artstock-db
+    plan: free
+    databaseName: artstock

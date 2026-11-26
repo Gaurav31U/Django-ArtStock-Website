@@ -14,15 +14,29 @@
       <section class="card" style="padding:28px">
         <h3><i class="fa-solid fa-location-dot" style="color:var(--accent)"></i> Delivery details</h3>
         <p class="muted" style="font-size:.92rem">Shipping to <strong style="color:var(--ink)">{{ user.customer.name }}</strong> · {{ user.customer.phone }} · <a href="{% url 'cupdate' user.id %}" style="color:var(--accent)">edit profile</a></p>
-        {% include 'partials/form_fields.html' %}
+        <div class="field{% if form.delivery_addr.errors %} has-error{% endif %}">
+          <label for="{{ form.delivery_addr.id_for_label }}">{{ form.delivery_addr.label }}</label>
+          {{ form.delivery_addr }}{{ form.delivery_addr.errors }}
+        </div>
       </section>
       <section class="card" style="padding:28px">
         <h3><i class="fa-solid fa-wallet" style="color:var(--accent)"></i> Payment</h3>
-        <div class="pay-option">
-          <i class="fa-solid fa-money-bill-wave"></i>
-          <div><strong>Cash / UPI on delivery</strong><div class="muted" style="font-size:.88rem">Pay the courier when your artwork arrives. No card details needed.</div></div>
-          <i class="fa-solid fa-circle-check" style="margin-left:auto"></i>
+        <div class="pay-options">
+          {% for radio in form.payment_method %}
+          <label class="pay-option">
+            {{ radio.tag }}
+            {% if radio.data.value == 'online' %}
+              <i class="fa-solid fa-credit-card"></i>
+              <div><strong>Pay online</strong><div class="muted" style="font-size:.88rem">UPI, cards, net banking and wallets via Razorpay.</div></div>
+            {% else %}
+              <i class="fa-solid fa-money-bill-wave"></i>
+              <div><strong>Pay on delivery</strong><div class="muted" style="font-size:.88rem">Pay in cash or UPI when your artwork arrives.</div></div>
+            {% endif %}
+            <i class="fa-solid fa-circle-check check"></i>
+          </label>
+          {% endfor %}
         </div>
+        {% if not online_enabled %}<p class="help" style="margin-top:12px">Online payment appears here once Razorpay keys are configured.</p>{% endif %}
       </section>
     </div>
 
@@ -30,7 +44,7 @@
       <h3>Your order</h3>
       {% for item in items %}
       <div class="mini-item">
-        <img src="{{ item.Art_id.image.url }}" alt="">
+        <img src="{{ item.Art_id.thumb_url }}" alt="">
         <div><strong>{{ item.Art_id.name }}</strong><div class="muted">Qty {{ item.quantity }}</div></div>
         <span>₹{{ item.line_total|intcomma }}</span>
       </div>

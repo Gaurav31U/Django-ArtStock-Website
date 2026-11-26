@@ -1,0 +1,7 @@
+{% extends 'registration/_shell.html' %}
+{% block title %}Check your email{% endblock title %}
+{% block card %}
+<h1>Check your email</h1>
+<p class="muted">If an account uses that address, a reset link is on its way. It may take a minute — check your spam folder too.</p>
+<a href="{% url 'index' %}" class="btn btn-outline">Back to the gallery</a>
+{% endblock card %}

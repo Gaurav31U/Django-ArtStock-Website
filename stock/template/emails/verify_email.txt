@@ -1,0 +1,9 @@
+Hi {{ user.username }},
+
+Please confirm your email address for ArtStock by opening this link:
+
+{{ link }}
+
+If you didn't create an ArtStock account, you can ignore this email.
+
+— The ArtStock team

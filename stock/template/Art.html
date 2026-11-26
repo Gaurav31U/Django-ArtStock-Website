@@ -6,14 +6,24 @@
   <nav class="crumbs"><a href="{% url 'index' %}">Gallery</a> / <a href="{% url 'index' %}?category={{ view.category|urlencode }}#gallery">{{ view.category }}</a> / <span>{{ view.name }}</span></nav>
 
   <div class="detail">
-    <div class="detail-media">
-      <a href="{{ view.image.url }}" target="_blank" rel="noopener" title="Open full size"><img src="{{ view.image.url }}" alt="{{ view.name }}"></a>
+    <div class="detail-media-wrap">
+      <div class="detail-media">
+        <a href="{{ view.image.url }}" target="_blank" rel="noopener" id="mainImageLink" title="Open full size"><img src="{{ view.image.url }}" alt="{{ view.name }}" id="mainImage"></a>
+      </div>
+      {% if gallery|length > 1 %}
+      <div class="thumbs" role="list" aria-label="More photos">
+        {% for img in gallery %}
+        <button type="button" class="thumb-btn{% if forloop.first %} active{% endif %}" data-src="{{ img.url }}" aria-label="Show photo {{ forloop.counter }}"><img src="{{ img.url }}" alt="" loading="lazy"></button>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
 
     <div class="detail-info">
       <span class="eyebrow">{{ view.category }}</span>
       <h1>{{ view.name }}</h1>
       <p class="muted">by <a href="{% url 'artist_public' view.Artist_id.pk %}" style="color:var(--ink);font-weight:600">{{ view.Artist_id.name }}</a></p>
+      {% if view.avg_rating %}<a href="#reviews">{% include 'partials/stars.html' with rating=view.avg_rating count=view.review_count %}</a>{% endif %}
       <div class="detail-price">₹{{ view.price|intcomma }}</div>
 
       {% if view.in_stock %}
@@ -21,15 +31,21 @@
           {% if user.artist == view.Artist_id %}<a href="{% url 'edit_art' view.Art_id %}" class="btn btn-dark btn-lg"><i class="fa-solid fa-pen"></i> Edit this artwork</a>
           {% else %}<div class="alert info"><i class="fa-solid fa-circle-info"></i> Sign in with a collector account to buy artwork.</div>{% endif %}
         {% else %}
-        <form method="post" action="{% url 'Add_to_Cart' view.Art_id %}" class="buy-box">
-          {% csrf_token %}
-          <div class="qty">
-            <button type="button" data-step="-1" aria-label="Decrease">−</button>
-            <input type="number" name="quantity" value="1" min="1" max="{{ view.quantity }}" aria-label="Quantity">
-            <button type="button" data-step="1" aria-label="Increase">+</button>
-          </div>
-          <button type="submit" class="btn btn-primary btn-lg" style="flex:1"><i class="fa-solid fa-bag-shopping"></i> Add to cart</button>
-        </form>
+        <div class="buy-box">
+          <form method="post" action="{% url 'Add_to_Cart' view.Art_id %}" class="buy-box" style="flex:1">
+            {% csrf_token %}
+            <div class="qty">
+              <button type="button" data-step="-1" aria-label="Decrease">−</button>
+              <input type="number" name="quantity" value="1" min="1" max="{{ view.quantity }}" aria-label="Quantity">
+              <button type="button" data-step="1" aria-label="Increase">+</button>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg" style="flex:1"><i class="fa-solid fa-bag-shopping"></i> Add to cart</button>
+          </form>
+          <form method="post" action="{% url 'toggle_wishlist' view.Art_id %}" class="wish-big-form">
+            {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="btn btn-outline btn-lg wish-big{% if view.pk in wishlist_ids %} on{% endif %}" aria-label="{% if view.pk in wishlist_ids %}Remove from wishlist{% else %}Save to wishlist{% endif %}" title="{% if view.pk in wishlist_ids %}Remove from wishlist{% else %}Save to wishlist{% endif %}"><i class="fa-{% if view.pk in wishlist_ids %}solid{% else %}regular{% endif %} fa-heart"></i><span class="wish-label">{% if view.pk in wishlist_ids %}Saved{% else %}Save to wishlist{% endif %}</span></button>
+          </form>
+        </div>
         {% endif %}
         <p class="stock-note"><i class="fa-solid fa-circle-check"></i> {{ view.quantity }} available</p>
       {% else %}
@@ -42,17 +58,55 @@
 
       <ul class="meta-list">
         <li><span>Artist</span><span>{{ view.Artist_id.name }}</span></li>
+        {% if view.medium %}<li><span>Medium</span><span>{{ view.medium }}</span></li>{% endif %}
+        {% if view.size %}<li><span>Size</span><span>{{ view.size }}</span></li>{% endif %}
+        {% if view.year %}<li><span>Year</span><span>{{ view.year }}</span></li>{% endif %}
         <li><span>Category</span><span>{{ view.category }}</span></li>
         <li><span>Reference</span><span>#AS-{{ view.Art_id|stringformat:"04d" }}</span></li>
       </ul>
 
       <div class="perks">
         <div class="perk"><i class="fa-solid fa-truck"></i>Free home delivery</div>
-        <div class="perk"><i class="fa-solid fa-money-bill-wave"></i>Pay on delivery</div>
+        <div class="perk"><i class="fa-solid fa-shield-halved"></i>Pay online or on delivery</div>
         <div class="perk"><i class="fa-solid fa-certificate"></i>Original by the artist</div>
       </div>
     </div>
   </div>
+
+  <section id="reviews" class="reviews">
+    <div class="section-title"><h2>Reviews {% if view.review_count %}<span class="muted" style="font-size:.6em">({{ view.review_count }})</span>{% endif %}</h2>
+      {% if view.avg_rating %}{% include 'partials/stars.html' with rating=view.avg_rating %}{% endif %}
+    </div>
+
+    {% if can_review %}
+    <form method="post" action="{% url 'add_review' view.Art_id %}" class="card review-form">
+      {% csrf_token %}
+      <h3>{% if my_review %}Update your review{% else %}Rate this piece{% endif %}</h3>
+      <div class="star-input" role="radiogroup" aria-label="Rating">
+        {% for radio in review_form.rating %}
+          {{ radio.tag }}<label for="{{ radio.id_for_label }}" title="{{ radio.choice_label }} star{{ radio.choice_label|pluralize }}"><i class="fa-solid fa-star"></i><span class="sr-only">{{ radio.choice_label }} stars</span></label>
+        {% endfor %}
+      </div>
+      <div class="field">{{ review_form.comment }}</div>
+      <button class="btn btn-primary">{% if my_review %}Save review{% else %}Post review{% endif %}</button>
+    </form>
+    {% elif user.is_authenticated and user.is_customer %}
+    <p class="muted" style="font-size:.92rem"><i class="fa-solid fa-circle-info"></i> You can review this piece once an order for it has been delivered to you.</p>
+    {% endif %}
+
+    {% for r in reviews %}
+    <article class="review">
+      <div class="avatar sm">{{ r.customer.name|first|upper }}</div>
+      <div>
+        <div class="row" style="gap:10px"><strong>{{ r.customer.name }}</strong>{% include 'partials/stars.html' with rating=r.rating %}<span class="muted" style="font-size:.84rem">{{ r.created_at|date:"d M Y" }}</span></div>
+        {% if r.comment %}<p>{{ r.comment|linebreaksbr }}</p>{% endif %}
+        <span class="verified"><i class="fa-solid fa-circle-check"></i> Verified buyer</span>
+      </div>
+    </article>
+    {% empty %}
+    <p class="muted">No reviews yet.</p>
+    {% endfor %}
+  </section>
 
   {% if related %}
   <div class="section-title" style="margin-top:64px"><h2>You may also like</h2><a href="{% url 'index' %}#gallery" class="btn btn-outline btn-sm">View all</a></div>
@@ -62,3 +116,14 @@
   {% endif %}
 </div>
 {% endblock content %}
+{% block scripts %}
+<script>
+  document.querySelectorAll('.thumb-btn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.getElementById('mainImage').src = b.dataset.src;
+      document.getElementById('mainImageLink').href = b.dataset.src;
+      document.querySelectorAll('.thumb-btn').forEach(function (x) { x.classList.toggle('active', x === b); });
+    });
+  });
+</script>
+{% endblock scripts %}

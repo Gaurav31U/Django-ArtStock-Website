@@ -6,10 +6,12 @@
     <span class="eyebrow">{% block eyebrow %}Collector profile{% endblock eyebrow %}</span>
     <h1>{{ title }}</h1>
     <p class="muted">{{ subtitle }}</p>
-    {% if art %}<div class="current-image"><img src="{{ art.image.url }}" alt=""><span>Current image</span></div>{% endif %}
+    {% if art %}<div class="current-image"><img src="{{ art.thumb_url }}" alt=""><span>Current main image</span></div>{% endif %}
+    {% if form.instance.photo %}<div class="current-image"><img src="{{ form.instance.photo.url }}" alt="" style="border-radius:50%"><span>Current profile photo</span></div>{% endif %}
     <form method="post" enctype="multipart/form-data" style="margin-top:24px">
       {% csrf_token %}
       {% include 'partials/form_fields.html' %}
+      {% block extra_fields %}{% endblock extra_fields %}
       <div class="row" style="margin-top:8px">
         <button class="btn btn-primary btn-lg">{% block submit %}Save details{% endblock submit %}</button>
         <a href="{% block cancel_url %}{% url 'index' %}{% endblock cancel_url %}" class="btn btn-outline btn-lg">Cancel</a>

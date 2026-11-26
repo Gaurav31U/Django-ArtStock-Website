@@ -1,0 +1,14 @@
+{% load humanize %}Hi {{ customer.name }},
+
+Your order #{{ order.O_id }} for “{{ order.Art_id.name }}” is now: {{ order.status }}.
+{% if order.status == 'Dispatched' %}
+It's on its way to:
+{{ order.delivery_addr }}
+{% elif order.status == 'Completed' %}
+We hope you love it! You can leave a review here: {{ site_url }}{% url 'Art' order.Art_id.Art_id %}#reviews
+{% elif order.status == 'Cancelled' %}{% if order.payment_status == 'refund_due' %}
+Your payment of ₹{{ order.total_amount|intcomma }} will be refunded to the original payment method.
+{% endif %}{% endif %}
+See all your orders: {{ site_url }}{% url 'profile' %}
+
+— The ArtStock team

@@ -1,0 +1,1 @@
+{% load artstock_tags %}{% if rating %}<span class="stars" aria-label="Rated {{ rating|floatformat:1 }} out of 5">{% for cls in rating|stars %}<i class="{{ cls }}" aria-hidden="true"></i>{% endfor %}<span class="stars-count">{{ rating|floatformat:1 }}{% if count %} ({{ count }}){% endif %}</span></span>{% endif %}

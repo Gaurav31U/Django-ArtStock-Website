@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container" style="padding-top:36px">
   <div class="card profile-head">
-    <div class="avatar">{{ artist.name|first|upper }}</div>
+    {% include 'partials/artist_avatar.html' %}
     <div class="info">
       <span class="eyebrow">Artist studio</span>
       <h1>{{ artist.name }}</h1>
@@ -14,6 +14,7 @@
         <span><i class="fa-solid fa-phone"></i>{{ artist.phone }}</span>
         <span><i class="fa-solid fa-location-dot"></i>{{ artist.address|truncatechars:50 }}</span>
       </div>
+      {% if not artist.bio or not artist.photo %}<p class="help" style="margin:8px 0 0"><i class="fa-solid fa-lightbulb"></i> Add a {% if not artist.photo %}profile photo{% endif %}{% if not artist.photo and not artist.bio %} and {% endif %}{% if not artist.bio %}short bio{% endif %} — collectors trust artists they can get to know. <a href="{% url 'aupdate' user.id %}" style="color:var(--accent)">Edit profile</a></p>{% endif %}
     </div>
     <div class="row">
       <a href="{% url 'artist_public' artist.pk %}" class="btn btn-outline"><i class="fa-regular fa-eye"></i> Public page</a>
@@ -27,40 +28,22 @@
     <div class="card stat"><span>Orders</span><strong>{{ summary.orders|default:0 }}</strong></div>
     <div class="card stat"><span>Pieces sold</span><strong>{{ summary.pieces|default:0 }}</strong></div>
     <div class="card stat"><span>Revenue</span><strong>₹{{ summary.revenue|default:0|intcomma }}</strong></div>
+    <div class="card stat"><span>Avg rating</span><strong>{% if rating.avg %}{{ rating.avg|floatformat:1 }}<small class="muted" style="font-size:.5em"> / 5 · {{ rating.count }} review{{ rating.count|pluralize }}</small>{% else %}—{% endif %}</strong></div>
   </div>
 
-  <div class="section-title"><h2>Incoming orders</h2></div>
-  {% if sales %}
-  <div class="card table-wrap">
-    <table class="table">
-      <thead><tr><th>Artwork</th><th>Buyer</th><th>Date</th><th>Qty</th><th>Total</th><th>Status</th><th>Update</th></tr></thead>
-      <tbody>
-      {% for o in sales %}
-        <tr>
-          <td><span class="cell-art"><img class="thumb" src="{{ o.Art_id.image.url }}" alt="">{{ o.Art_id.name }}</span></td>
-          <td>{{ o.orderedBy.name }}<div class="muted" style="font-size:.82rem">{{ o.delivery_addr|truncatechars:40 }}</div></td>
-          <td class="muted">{{ o.timestamp|date:"d M Y" }}</td>
-          <td>{{ o.quantity }}</td>
-          <td><strong>₹{{ o.total_amount|intcomma }}</strong></td>
-          <td><span class="status {{ o.status }}">{{ o.status }}</span></td>
-          <td>
-            {% if o.status != 'Cancelled' and o.status != 'Completed' %}
-            <form method="post" action="{% url 'update_order_status' o.O_id %}" class="inline-form">
-              {% csrf_token %}
-              <select name="status" class="input select" aria-label="New status">
-                {% for s in status_flow %}<option value="{{ s }}" {% if s == o.status %}selected{% endif %}>{{ s }}</option>{% endfor %}
-              </select>
-              <button class="btn btn-dark btn-sm">Save</button>
-            </form>
-            {% else %}<span class="muted">—</span>{% endif %}
-          </td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  {% include 'partials/revenue_chart.html' %}
+
+  <div class="section-title"><h2>Open orders {% if open_sales %}<span class="muted" style="font-size:.6em">({{ open_sales|length }})</span>{% endif %}</h2></div>
+  {% if open_sales %}
+  {% include 'partials/sales_table.html' with rows=open_sales %}
   {% else %}
-  <div class="empty"><i class="fa-solid fa-inbox"></i><h3>No orders yet</h3><p>Orders for your artwork will show up here.</p></div>
+  <div class="empty"><i class="fa-solid fa-inbox"></i><h3>You're all caught up</h3><p>New orders for your artwork will show up here.</p></div>
+  {% endif %}
+  {% if past_sales %}
+  <details class="past-orders">
+    <summary>Past orders ({{ past_sales|length }}) — completed and cancelled</summary>
+    {% include 'partials/sales_table.html' with rows=past_sales %}
+  </details>
   {% endif %}
 
   <div class="section-title"><h2>My artwork</h2><a href="{% url 'addart' %}" class="btn btn-outline btn-sm"><i class="fa-solid fa-plus"></i> New</a></div>
@@ -69,13 +52,14 @@
     {% for art in arts %}
     <article class="card art-card manage-card">
       <a href="{% url 'Art' art.Art_id %}" class="art-thumb">
-        <img src="{{ art.image.url }}" alt="{{ art.name }}" loading="lazy">
+        <img src="{{ art.thumb_url }}" alt="{{ art.name }}" loading="lazy">
         <span class="art-tag">{{ art.category }}</span>
         {% if not art.in_stock %}<span class="art-tag sold">Sold out</span>{% endif %}
       </a>
       <div class="art-body">
         <a href="{% url 'Art' art.Art_id %}" class="art-title">{{ art.name }}</a>
         <span class="art-artist">₹{{ art.price|intcomma }} · {{ art.quantity }} in stock · {{ art.sold|default:0 }} sold</span>
+        {% include 'partials/stars.html' with rating=art.avg_rating count=art.review_count %}
         <div class="art-foot">
           <a href="{% url 'edit_art' art.Art_id %}" class="btn btn-outline btn-sm"><i class="fa-solid fa-pen"></i> Edit</a>
           <form method="post" action="{% url 'delete_art' art.Art_id %}" onsubmit="return confirm('Delete “{{ art.name|escapejs }}”? This also removes its orders.')">

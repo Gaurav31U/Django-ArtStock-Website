@@ -1,0 +1,29 @@
+{% load humanize %}
+<div class="card table-wrap">
+    <table class="table">
+      <thead><tr><th>Artwork</th><th>Buyer</th><th>Date</th><th>Qty</th><th>Total</th><th>Status</th><th>Update</th></tr></thead>
+      <tbody>
+      {% for o in rows %}
+        <tr>
+          <td><span class="cell-art"><img class="thumb" src="{{ o.Art_id.thumb_url }}" alt="">{{ o.Art_id.name }}</span></td>
+          <td>{{ o.orderedBy.name }}<div class="muted" style="font-size:.82rem">{{ o.delivery_addr|truncatechars:40 }}</div></td>
+          <td class="muted">{{ o.timestamp|date:"d M Y" }}</td>
+          <td>{{ o.quantity }}</td>
+          <td><strong>₹{{ o.total_amount|intcomma }}</strong></td>
+          <td><span class="status {{ o.status }}">{{ o.status }}</span><div class="pay-status {{ o.payment_status }}">{{ o.get_payment_method_display }} · {{ o.get_payment_status_display|lower }}</div></td>
+          <td>
+            {% if o.status != 'Cancelled' and o.status != 'Completed' %}
+            <form method="post" action="{% url 'update_order_status' o.O_id %}" class="inline-form">
+              {% csrf_token %}
+              <select name="status" class="input select" aria-label="New status">
+                {% for s in status_flow %}<option value="{{ s }}" {% if s == o.status %}selected{% endif %}>{{ s }}</option>{% endfor %}
+              </select>
+              <button class="btn btn-dark btn-sm">Save</button>
+            </form>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>

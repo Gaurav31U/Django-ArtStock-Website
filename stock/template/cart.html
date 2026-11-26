@@ -13,7 +13,7 @@
     <div class="card">
       {% for item in items %}
       <div class="cart-item">
-        <a href="{% url 'Art' item.Art_id.Art_id %}"><img src="{{ item.Art_id.image.url }}" alt="{{ item.Art_id.name }}"></a>
+        <a href="{% url 'Art' item.Art_id.Art_id %}"><img src="{{ item.Art_id.thumb_url }}" alt="{{ item.Art_id.name }}"></a>
         <div>
           <h3><a href="{% url 'Art' item.Art_id.Art_id %}">{{ item.Art_id.name }}</a></h3>
           <div class="muted" style="font-size:.9rem">by {{ item.Art_id.Artist_id.name }} · ₹{{ item.Art_id.price|intcomma }} each</div>

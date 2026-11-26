@@ -96,7 +96,7 @@ class ArtStockFlowTests(TestCase):
 		self.assertEqual((item.quantity, item.total_amount), (1, 1500))
 
 		self.assertContains(self.client.get(reverse('Cart')), 'Ghat at Dawn')
-		r = self.client.post(reverse('payment'), {'delivery_addr': 'New address'})
+		r = self.client.post(reverse('payment'), {'delivery_addr': 'New address', 'payment_method': 'cod'})
 		self.assertRedirects(r, reverse('profile'))
 		item.refresh_from_db()
 		self.art.refresh_from_db()

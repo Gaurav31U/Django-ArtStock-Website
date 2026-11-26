@@ -1,0 +1,7 @@
+{% extends 'registration/_shell.html' %}
+{% block title %}Password updated{% endblock title %}
+{% block card %}
+<h1>Password updated</h1>
+<p class="muted">You can now sign in with your new password.</p>
+<div class="row"><a href="{% url 'login_customer' %}" class="btn btn-primary">Collector sign in</a><a href="{% url 'login_artist' %}" class="btn btn-outline">Artist sign in</a></div>
+{% endblock card %}

@@ -26,50 +26,58 @@
 
 <section class="section" id="gallery">
   <div class="container">
-    {% if show_hero %}
+    {% if filtered %}
+      <h1 style="margin-top:8px">{% if query %}Results for “{{ query }}”{% elif category %}{{ category }}{% else %}Filtered artwork{% endif %}</h1>
+    {% else %}
       <span class="eyebrow">The collection</span>
       <h2>Fresh on the walls</h2>
-    {% else %}
-      <h1 style="margin-top:8px">{% if query %}Results for “{{ query }}”{% else %}{{ category }}{% endif %}</h1>
     {% endif %}
 
     <form method="get" action="{% url 'index' %}#gallery" class="toolbar" style="margin-top:18px">
       <label class="search">
         <span class="sr-only">Search</span>
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input class="input" type="search" name="search" value="{{ query }}" placeholder="Search by title, artist or style…">
+        <input class="input" type="search" name="search" value="{{ query }}" placeholder="Search by title, artist, medium or style…">
       </label>
       {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
       <div class="row">
+        <div class="price-range" role="group" aria-label="Price range">
+          <span class="muted">₹</span>
+          <input class="input" type="number" min="0" name="min_price" value="{{ min_price|default_if_none:'' }}" placeholder="Min" aria-label="Minimum price">
+          <span class="muted">–</span>
+          <input class="input" type="number" min="0" name="max_price" value="{{ max_price|default_if_none:'' }}" placeholder="Max" aria-label="Maximum price">
+        </div>
         <label class="sr-only" for="sort">Sort</label>
         <select id="sort" name="sort" class="input select" style="width:auto;border-radius:999px;height:48px" onchange="this.form.submit()">
           <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
           <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: low to high</option>
           <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: high to low</option>
+          <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Top rated</option>
           <option value="name" {% if sort == 'name' %}selected{% endif %}>Title A–Z</option>
         </select>
-        <button class="btn btn-dark" style="height:48px">Search</button>
+        <button class="btn btn-dark" style="height:48px">Apply</button>
       </div>
     </form>
 
     <nav class="chips" aria-label="Categories">
       <a href="{% url 'index' %}{% if query %}?search={{ query|urlencode }}{% endif %}#gallery" class="chip {% if not category %}active{% endif %}">All</a>
       {% for c in categories %}
-      <a href="?category={{ c|urlencode }}{% if query %}&search={{ query|urlencode }}{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}#gallery" class="chip {% if category == c %}active{% endif %}">{{ c }}</a>
+      <a href="?category={{ c|urlencode }}{% if query %}&search={{ query|urlencode }}{% endif %}{% if sort != 'newest' %}&sort={{ sort }}{% endif %}{% if min_price is not None %}&min_price={{ min_price }}{% endif %}{% if max_price is not None %}&max_price={{ max_price }}{% endif %}#gallery" class="chip {% if category == c %}active{% endif %}">{{ c }}</a>
       {% endfor %}
     </nav>
 
-    {% if not show_hero %}<p class="result-meta">{{ arts|length }} artwork{{ arts|length|pluralize }} found · <a href="{% url 'index' %}" style="color:var(--accent)">Clear filters</a></p>{% endif %}
+    {% if filtered %}<p class="result-meta">{{ page.paginator.count }} artwork{{ page.paginator.count|pluralize }} found · <a href="{% url 'index' %}#gallery" style="color:var(--accent)">Clear filters</a></p>{% endif %}
 
     {% if arts %}
     <div class="grid">
       {% for art in arts %}{% include 'partials/art_card.html' %}{% endfor %}
     </div>
+    {% include 'partials/pagination.html' %}
     {% else %}
     <div class="empty">
       <i class="fa-solid fa-image"></i>
       <h3>Nothing here yet</h3>
-      <p>No artwork matches your search. Try another keyword or category.</p>
+      <p>No artwork matches your search. Try another keyword, category or price range.</p>
       <a href="{% url 'index' %}" class="btn btn-outline">Browse everything</a>
     </div>
     {% endif %}
@@ -82,8 +90,8 @@
     <div class="features">
       <div class="card feature"><i class="fa-solid fa-paintbrush"></i><h3>Straight from artists</h3><p>Every piece is listed by the artist who made it — no middlemen.</p></div>
       <div class="card feature"><i class="fa-solid fa-truck-fast"></i><h3>Free home delivery</h3><p>Carefully packed and shipped to your door at no extra cost.</p></div>
-      <div class="card feature"><i class="fa-solid fa-hand-holding-dollar"></i><h3>Pay on delivery</h3><p>Pay only when your artwork arrives safely.</p></div>
-      <div class="card feature"><i class="fa-solid fa-user-plus"></i><h3>Free to join</h3><p>Create a collector or artist account in under a minute.</p></div>
+      <div class="card feature"><i class="fa-solid fa-shield-halved"></i><h3>Pay your way</h3><p>Pay securely online or in cash when your artwork arrives.</p></div>
+      <div class="card feature"><i class="fa-solid fa-star"></i><h3>Real reviews</h3><p>Ratings come only from collectors who received the piece.</p></div>
     </div>
   </div>
 </section>

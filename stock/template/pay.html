@@ -1,0 +1,48 @@
+{% extends 'built.html' %}
+{% load humanize %}
+{% block title %}Complete payment{% endblock title %}
+{% block content %}
+<div class="container section">
+  <div class="card form-card" style="text-align:center">
+    <span class="eyebrow">Secure payment</span>
+    <h1>Pay ₹{{ total|intcomma }}</h1>
+    <p class="muted">The Razorpay window should open automatically. Your order is placed as soon as the payment is confirmed.</p>
+    <div class="row" style="justify-content:center;margin-top:20px">
+      <button id="payBtn" class="btn btn-primary btn-lg"><i class="fa-solid fa-lock"></i> Pay now</button>
+      <a href="{% url 'payment' %}" class="btn btn-outline btn-lg">Back to checkout</a>
+    </div>
+    <form id="verifyForm" method="post" action="{% url 'payment_verify' %}">
+      {% csrf_token %}
+      <input type="hidden" name="razorpay_order_id">
+      <input type="hidden" name="razorpay_payment_id">
+      <input type="hidden" name="razorpay_signature">
+    </form>
+  </div>
+</div>
+{% endblock content %}
+{% block scripts %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+  (function () {
+    var form = document.getElementById('verifyForm');
+    var rzp = new Razorpay({
+      key: "{{ key_id|escapejs }}",
+      amount: {{ amount_paise }},
+      currency: "INR",
+      name: "ArtStock",
+      description: "Artwork order",
+      order_id: "{{ gateway_order_id|escapejs }}",
+      prefill: { name: "{{ customer.name|escapejs }}", email: "{{ customer.email|escapejs }}", contact: "{{ customer.phone|escapejs }}" },
+      theme: { color: "#b8431a" },
+      handler: function (resp) {
+        form.razorpay_order_id.value = resp.razorpay_order_id;
+        form.razorpay_payment_id.value = resp.razorpay_payment_id;
+        form.razorpay_signature.value = resp.razorpay_signature;
+        form.submit();
+      }
+    });
+    document.getElementById('payBtn').addEventListener('click', function () { rzp.open(); });
+    rzp.open();
+  })();
+</script>
+{% endblock scripts %}

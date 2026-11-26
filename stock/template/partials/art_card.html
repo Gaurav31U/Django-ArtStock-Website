@@ -1,13 +1,24 @@
 {% load humanize %}
 <article class="card art-card">
   <a href="{% url 'Art' art.Art_id %}" class="art-thumb">
-    <img src="{{ art.image.url }}" alt="{{ art.name }}" loading="lazy">
+    <img src="{{ art.thumb_url }}" alt="{{ art.name }}" loading="lazy">
     <span class="art-tag">{{ art.category }}</span>
     {% if not art.in_stock %}<span class="art-tag sold">Sold out</span>{% endif %}
   </a>
+  {% if not user.is_artist %}
+  <form method="post" action="{% url 'toggle_wishlist' art.Art_id %}" class="wish-form">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button class="wish-btn{% if art.pk in wishlist_ids %} on{% endif %}" aria-pressed="{% if art.pk in wishlist_ids %}true{% else %}false{% endif %}"
+            title="{% if art.pk in wishlist_ids %}Remove from wishlist{% else %}Save to wishlist{% endif %}" aria-label="Save {{ art.name }} to wishlist">
+      <i class="fa-{% if art.pk in wishlist_ids %}solid{% else %}regular{% endif %} fa-heart"></i>
+    </button>
+  </form>
+  {% endif %}
   <div class="art-body">
     <a href="{% url 'Art' art.Art_id %}" class="art-title">{{ art.name }}</a>
     <a href="{% url 'artist_public' art.Artist_id.pk %}" class="art-artist">by {{ art.Artist_id.name }}</a>
+    {% include 'partials/stars.html' with rating=art.avg_rating count=art.review_count %}
     <div class="art-foot">
       <span class="price">₹{{ art.price|intcomma }}</span>
       {% if art.in_stock and not user.is_artist %}

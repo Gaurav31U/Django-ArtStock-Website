@@ -17,6 +17,7 @@
     </div>
     <div class="row">
       <a href="{% url 'cupdate' user.id %}" class="btn btn-outline"><i class="fa-solid fa-pen"></i> Edit profile</a>
+      <a href="{% url 'wishlist' %}" class="btn btn-outline"><i class="fa-regular fa-heart"></i> Wishlist</a>
       <a href="{% url 'Cart' %}" class="btn btn-dark"><i class="fa-solid fa-bag-shopping"></i> Cart{% if cart_count %} ({{ cart_count }}){% endif %}</a>
     </div>
   </div>
@@ -25,19 +26,22 @@
   {% if orders %}
   <div class="card table-wrap">
     <table class="table">
-      <thead><tr><th>Artwork</th><th>Order</th><th>Date</th><th>Qty</th><th>Total</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th>Artwork</th><th>Order</th><th>Date</th><th>Qty</th><th>Total</th><th>Payment</th><th>Status</th><th></th></tr></thead>
       <tbody>
       {% for o in orders %}
         <tr>
-          <td><a class="cell-art" href="{% url 'Art' o.Art_id.Art_id %}"><img class="thumb" src="{{ o.Art_id.image.url }}" alt="">{{ o.Art_id.name }}</a></td>
+          <td><a class="cell-art" href="{% url 'Art' o.Art_id.Art_id %}"><img class="thumb" src="{{ o.Art_id.thumb_url }}" alt="">{{ o.Art_id.name }}</a></td>
           <td class="muted">#{{ o.O_id }}</td>
           <td class="muted">{{ o.timestamp|date:"d M Y" }}</td>
           <td>{{ o.quantity }}</td>
           <td><strong>₹{{ o.total_amount|intcomma }}</strong></td>
+          <td><span class="muted" style="font-size:.85rem">{{ o.get_payment_method_display }}</span><div class="pay-status {{ o.payment_status }}">{{ o.get_payment_status_display }}</div></td>
           <td><span class="status {{ o.status }}">{{ o.status }}</span></td>
           <td>
             {% if o.status == 'Placed' or o.status == 'Acknowledged' %}
             <form method="post" action="{% url 'cancel_order' o.O_id %}" onsubmit="return confirm('Cancel this order?')">{% csrf_token %}<button class="btn btn-ghost btn-sm">Cancel</button></form>
+            {% elif o.status == 'Completed' %}
+            <a class="btn btn-outline btn-sm" href="{% url 'Art' o.Art_id.Art_id %}#reviews"><i class="fa-regular fa-star"></i> {% if o.Art_id_id in reviewed %}Edit review{% else %}Review{% endif %}</a>
             {% endif %}
           </td>
         </tr>

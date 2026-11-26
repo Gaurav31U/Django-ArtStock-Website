@@ -1,0 +1,14 @@
+{% load humanize %}Hi {{ customer.name }},
+
+Thank you for your order! Here is what you bought:
+{% for o in orders %}
+  • {{ o.Art_id.name }} by {{ o.Art_id.Artist_id.name }} — qty {{ o.quantity }} — ₹{{ o.total_amount|intcomma }} (order #{{ o.O_id }}){% endfor %}
+
+Total: ₹{{ total|intcomma }}
+Payment: {{ orders.0.get_payment_method_display }}
+Delivering to:
+{{ orders.0.delivery_addr }}
+
+Track your orders any time: {{ site_url }}{% url 'profile' %}
+
+— The ArtStock team

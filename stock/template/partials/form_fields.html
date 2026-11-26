@@ -1,7 +1,7 @@
 {% if form.non_field_errors %}<div class="alert error"><i class="fa-solid fa-circle-exclamation"></i>{{ form.non_field_errors|join:" " }}</div>{% endif %}
 <div class="form-grid">
   {% for field in form %}
-  <div class="field{% if field.errors %} has-error{% endif %}{% if field.widget_type == 'textarea' or field.widget_type == 'clearablefile' %} span-2{% endif %}">
+  <div class="field{% if field.errors %} has-error{% endif %}{% if field.widget_type == 'textarea' or field.widget_type == 'clearablefile' or field.widget_type == 'multiplefile' %} span-2{% endif %}">
     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
     {{ field }}
     {% if field.help_text %}<span class="help">{{ field.help_text|safe }}</span>{% endif %}

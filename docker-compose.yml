@@ -5,10 +5,38 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - REDIS_URL=redis://redis:6379/1
+      DATABASE_URL: postgres://artstock:artstock@db:5432/artstock
+      REDIS_URL: redis://redis:6379/1
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me-in-production}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,app}
+      DJANGO_SECURE_SSL_REDIRECT: ${DJANGO_SECURE_SSL_REDIRECT:-False}
+      DJANGO_MEDIA_ROOT: /app/media
+    volumes:
+      - media:/app/media
     depends_on:
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: artstock
+      POSTGRES_USER: artstock
+      POSTGRES_PASSWORD: artstock
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U artstock"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   redis:
     build:
@@ -37,3 +65,7 @@ services:
     ports:
       - "3100:3100"
     container_name: loki
+
+volumes:
+  pgdata:
+  media:

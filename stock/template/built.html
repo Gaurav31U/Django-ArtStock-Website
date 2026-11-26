@@ -22,6 +22,7 @@
         <li><a href="{% url 'index' %}" class="{% if url_name == 'index' %}active{% endif %}">Gallery</a></li>
         <li><a href="{% url 'ContactUs' %}" class="{% if url_name == 'ContactUs' %}active{% endif %}">Contact</a></li>
         {% if user.is_authenticated and user.is_customer %}
+          <li><a href="{% url 'wishlist' %}" class="{% if url_name == 'wishlist' %}active{% endif %}" aria-label="Wishlist"><i class="fa-regular fa-heart"></i> Saved</a></li>
           <li><a href="{% url 'Cart' %}" class="{% if url_name == 'Cart' %}active{% endif %}"><i class="fa-solid fa-bag-shopping"></i> Cart {% if cart_count %}<span class="badge">{{ cart_count }}</span>{% endif %}</a></li>
           <li><a href="{% url 'profile' %}" class="{% if url_name == 'profile' %}active{% endif %}"><i class="fa-regular fa-user"></i> {{ user.username }}</a></li>
           <li><a href="{% url 'logouts' %}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</a></li>
@@ -40,6 +41,16 @@
       {% endwith %}
     </div>
   </header>
+
+  {% if user.is_authenticated and not user.email_verified and not user.is_staff and user.email %}
+  <div class="verify-bar">
+    <div class="container row" style="justify-content:center;gap:10px">
+      <i class="fa-regular fa-envelope"></i>
+      <span>Please confirm your email address ({{ user.email }}).</span>
+      <form method="post" action="{% url 'resend_verification' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="link-btn">Resend link</button></form>
+    </div>
+  </div>
+  {% endif %}
 
   {% if messages %}
   <div class="flash-wrap">

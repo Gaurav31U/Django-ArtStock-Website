@@ -1,0 +1,1 @@
+{% if artist.photo %}<img class="avatar{% if small %} sm{% endif %}" src="{{ artist.photo.url }}" alt="{{ artist.name }}">{% else %}<div class="avatar{% if small %} sm{% endif %}">{{ artist.name|first|upper }}</div>{% endif %}

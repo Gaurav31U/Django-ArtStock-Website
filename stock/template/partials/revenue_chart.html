@@ -1,0 +1,38 @@
+{% load humanize %}
+<section class="card chart-card" aria-labelledby="revTitle">
+  <div class="row between">
+    <div>
+      <h3 id="revTitle" style="margin:0">Monthly revenue</h3>
+      <p class="muted" style="margin:2px 0 0;font-size:.88rem">Last 12 months · orders placed, excluding cancellations</p>
+    </div>
+    <button type="button" class="btn btn-outline btn-sm" aria-controls="revTable" aria-expanded="false" onclick="var t=document.getElementById('revTable');var o=t.hidden;t.hidden=!o;this.setAttribute('aria-expanded',o);this.textContent=o?'Hide table':'View as table'">View as table</button>
+  </div>
+  {% if chart_has_data %}
+  <div class="col-chart" role="img" aria-label="Column chart of monthly revenue for the last 12 months">
+    <div class="col-axis" aria-hidden="true">
+      {% for t in chart_ticks %}<span>{{ t }}</span>{% endfor %}
+    </div>
+    <div class="col-plot">
+      <div class="col-grid" aria-hidden="true"><span></span><span></span><span></span></div>
+      {% for d in chart %}
+      <div class="col" tabindex="0" aria-label="{{ d.label }} {{ d.year }}: ₹{{ d.value|intcomma }}">
+        <div class="col-bar-area">
+          {% if d.is_peak %}<span class="col-value" style="bottom:calc({{ d.pct }}% + 6px)">₹{{ d.value|intcomma }}</span>{% endif %}
+          <div class="col-bar{% if not d.value %} zero{% endif %}" style="height:{{ d.pct }}%"></div>
+        </div>
+        <span class="col-label">{{ d.label }}</span>
+        <span class="col-tip" role="tooltip"><strong>₹{{ d.value|intcomma }}</strong>{{ d.label }} {{ d.year }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="chart-empty muted"><i class="fa-solid fa-chart-column"></i> Your sales will appear here after your first order.</div>
+  {% endif %}
+  <div id="revTable" class="table-wrap" hidden>
+    <table class="table" style="margin-top:14px">
+      <thead><tr><th>Month</th><th style="text-align:right">Revenue</th></tr></thead>
+      <tbody>{% for d in chart %}<tr><td>{{ d.label }} {{ d.year }}</td><td style="text-align:right">₹{{ d.value|intcomma }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</section>

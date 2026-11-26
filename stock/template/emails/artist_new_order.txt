@@ -1,0 +1,12 @@
+{% load humanize %}Hi {{ artist.name }},
+
+Good news — {{ customer.name }} just ordered:
+{% for o in orders %}
+  • {{ o.Art_id.name }} — qty {{ o.quantity }} — ₹{{ o.total_amount|intcomma }} (order #{{ o.O_id }}, {{ o.get_payment_method_display|lower }}){% endfor %}
+
+Ship to:
+{{ orders.0.delivery_addr }}
+
+Acknowledge and update the order in your studio: {{ site_url }}{% url 'aprofile' %}
+
+— The ArtStock team

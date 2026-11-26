@@ -1,4 +1,19 @@
 {% extends 'profileform.html' %}
 {% block eyebrow %}Artist studio{% endblock eyebrow %}
+{% block extra_fields %}
+{% if extra_images %}
+<div class="field span-2">
+  <label>Current extra photos <span class="muted" style="font-weight:400">— tick any to remove</span></label>
+  <div class="extra-grid">
+    {% for img in extra_images %}
+    <label class="extra-item">
+      <img src="{{ img.image.url }}" alt="">
+      <span><input type="checkbox" name="remove_image" value="{{ img.pk }}"> Remove</span>
+    </label>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock extra_fields %}
 {% block submit %}{% if art %}Save changes{% else %}Publish artwork{% endif %}{% endblock submit %}
 {% block cancel_url %}{% url 'aprofile' %}{% endblock cancel_url %}
